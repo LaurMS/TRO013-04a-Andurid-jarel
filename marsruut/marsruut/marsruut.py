@@ -91,48 +91,58 @@ class Marsruut(Node):
         self.algus_y = self.praegune_y
         self.algus_yaw = self.praegune_yaw
 
-    def control_loop(self):
-        cmd = Twist()
+def control_loop(self):
+    cmd = Twist()
 
-        # TODO: implementeeri olekumasina loogika
-        #
-        # Iga olek:
-        #   1. Kontrolli kas eesmärk on saavutatud
-        #   2. Kui jah: salvesta uus alguspunkt, mine järgmisse olekusse
-        #   3. Kui ei: saada liikumiskäsk
-        #
-        # Näide OLEK_EDASI_1 jaoks:
-        #
-        # if self.olek == OLEK_EDASI_1:
-        #     if self.algus_x is None:
-        #         self.salvesta_algus()  # Esimene kord: salvesta algus
-        #
-        #     if self.labitud_vahemaa() >= self.VAHEMAA:
-        #         # 1m läbitud! Peatu ja mine pöörde-olekusse
-        #         self.get_logger().info('1m läbitud, pöördun...')
-        #         self.salvesta_algus()
-        #         self.olek = OLEK_POORDE_1
-        #     else:
-        #         # Sõida edasi
-        #         cmd.linear.x = self.SOIDUKIIRUS
-        #
-        # elif self.olek == OLEK_POORDE_1:
-        #     if abs(self.poorde_nurk()) >= abs(self.POORDE_NURK):
-        #         # 90° pöördud! Mine järgmisse olekusse
-        #         self.get_logger().info('90° pöördud, sõidan edasi...')
-        #         self.salvesta_algus()
-        #         self.olek = OLEK_EDASI_2
-        #     else:
-        #         # Pöördu paremale (negatiivne = paremale)
-        #         cmd.angular.z = -self.POORDEKIIRUS
-        #
-        # TODO: lisa OLEK_EDASI_2, OLEK_POORDE_2, OLEK_VALMIS
-        #
-        # elif self.olek == OLEK_VALMIS:
-        #     self.get_logger().info('Marsruut lõpetatud!')
-        #     self.timer.cancel()
+    if self.olek == OLEK_EDASI_1:
+
+        if self.algus_x is None:
+            self.salvesta_algus()
+
+        if self.labitud_vahemaa() >= self.VAHEMAA:
+            self.get_logger().info('1m läbitud, pöördun...')
+            self.salvesta_algus()
+            self.olek = OLEK_POORDE_1
+        else:
+            cmd.linear.x = self.SOIDUKIIRUS
+
+    elif self.olek == OLEK_POORDE_1:
+
+        if abs(self.poorde_nurk()) >= abs(self.POORDE_NURK):
+            self.get_logger().info('90° pöördud, sõidan edasi...')
+            self.salvesta_algus()
+            self.olek = OLEK_EDASI_2
+        else:
+            cmd.angular.z = -self.POORDEKIIRUS
+
+    elif self.olek == OLEK_EDASI_2:
+
+        if self.labitud_vahemaa() >= self.VAHEMAA:
+            self.get_logger().info('Teine 1m läbitud, pöördun...')
+            self.salvesta_algus()
+            self.olek = OLEK_POORDE_2
+        else:
+            cmd.linear.x = self.SOIDUKIIRUS
+
+    elif self.olek == OLEK_POORDE_2:
+
+        if abs(self.poorde_nurk()) >= abs(self.POORDE_NURK):
+            self.get_logger().info('Marsruut lõpetatud!')
+            self.olek = OLEK_VALMIS
+        else:
+            cmd.angular.z = -self.POORDEKIIRUS
+
+    elif self.olek == OLEK_VALMIS:
+
+        cmd.linear.x = 0.0
+        cmd.angular.z = 0.0
 
         self.cmd_pub.publish(cmd)
+
+        self.timer.cancel()
+        return
+
+    self.cmd_pub.publish(cmd)
 
 
 def main(args=None):

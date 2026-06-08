@@ -49,21 +49,24 @@ class RajaAndur(Node):
     def scan_callback(self, msg):
         self.viimane_scan = msg
 
-    def sektori_min(self, ranges, algus, lopp,
-                    range_min, range_max):
-        """Leia minimaalne kehtiv kaugus sektoris."""
+def sektori_min(self, ranges, algus, lopp, range_min, range_max):
+    """Leia minimaalne kehtiv kaugus antud sektoris."""
 
-        kehtivad = [
-            ranges[i % len(ranges)]
-            for i in range(algus, lopp)
-            if (
-                range_min <= ranges[i % len(ranges)] <= range_max
-                and not math.isinf(ranges[i % len(ranges)])
-                and not math.isnan(ranges[i % len(ranges)])
-            )
-        ]
+    kehtivad = []
 
-        return min(kehtivad) if kehtivad else float('inf')
+    for i in range(algus, lopp):
+        r = ranges[i % len(ranges)]
+
+        if math.isinf(r) or math.isnan(r):
+            continue
+
+        if range_min <= r <= range_max:
+            kehtivad.append(r)
+
+    if len(kehtivad) == 0:
+        return float('inf')
+
+    return min(kehtivad)
 
     def margista(self, kaugus):
         """Tagasta märgis kauguse põhjal."""
